@@ -1,0 +1,68 @@
+Running populate hook for: calendar_v2...
+Running populate hook for: excel_v2...
+Running populate hook for: freecad_mcp...
+Running populate hook for: mysql...
+Running populate hook for: nextcloud_browser...
+Running populate hook for: nextcloud_mcp...
+Running populate hook for: openproject...
+Running populate hook for: openproject_mcp...
+No snapshot export required: .xlsx/.csv state lives in /filesystem, captured by the platform filesystem subsystem
+Running populate hook for: powerpoint_v2...
+Running populate hook for: wiki_js...
+Projects path: /.apps_data/freecad_mcp/projects
+No snapshot needed - projects are stored directly in STATE_LOCATION
+Project files:
+Running populate hook for: word_v2...
+No snapshot export required: .docx state lives in /filesystem, captured by the platform filesystem subsystem
+No snapshot needed
+No snapshot step required for MCP server
+Populate hook completed: excel_v2 (exit=0)
+=== Snapshotting Nextcloud data ===
+Populate hook completed: calendar_v2 (exit=0)
+Populate hook completed: nextcloud_mcp (exit=0)
+Populate hook completed: openproject_mcp (exit=0)
+Populate hook completed: word_v2 (exit=0)
+Populate hook completed: freecad_mcp (exit=0)
+=== Snapshotting Wiki.js ===
+  Target: /.apps_data/wiki_js
+Running as user: root
+Export location: /.apps_data/nextcloud_browser
+Exporting PostgreSQL database...
+No snapshot export required: .pptx state lives in /filesystem, captured by the platform filesystem subsystem
+Populate hook completed: powerpoint_v2 (exit=0)
+=== Snapshotting OpenProject ===
+  Target: /.apps_data/openproject
+Exporting PostgreSQL database...
+Exporting database...
+Database exported (2.6M)
+Exporting Wiki.js data...
+Data exported (0)
+
+=== Snapshot Complete ===
+Contents of /.apps_data/wiki_js:
+total 2.6M
+drwxrwxrwx 4 openproject root   46 Oct 15 06:56 data
+-rw-rw-r-- 1 root        root 2.6M Oct 15 12:11 wiki_dump.sql
+Populate hook completed: wiki_js (exit=0)
+  saved: /.apps_data/nextcloud_browser/database_dump.sql (2.1M)
+Exporting SQLite database...
+Populate hook completed: mysql (exit=0)
+Database exported (1.9M)
+No uploaded files to export
+
+=== Snapshot Complete ===
+Contents of /.apps_data/openproject:
+total 1.9M
+-rw-r--r-- 1 root root 1.9M Oct 15 12:11 openproject_dump.sql
+Populate hook completed: openproject (exit=0)
+WARNING: nextcloud.db was not created - check errors above
+Exporting admin files...
+  saved: /.apps_data/nextcloud_browser/files/ (824K)
+Exporting owner files...
+=== Snapshot complete ===
+total 2.1M
+-rw-rw-r--  1 root     root     2.1M Oct 15 12:11 database_dump.sql
+drwxr-x---  3 www-data www-data   33 Oct 15 11:40 files
+drwxr-xr-x 36 root     root     4.0K Oct 15 12:11 user_files
+Populate hook completed: nextcloud_browser (exit=0)
+db_diff: 51 added, 131 deleted, 105 modified, chars=149418 max_chars=899484 format=full

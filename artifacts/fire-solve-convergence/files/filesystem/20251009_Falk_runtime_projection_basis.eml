@@ -1,0 +1,90 @@
+From: Marguerite Falk <mfalk@thecfdme.com>
+To: Renata Ellsworth <rellsworth@thecfdme.com>
+Cc: Gordon Selby <gselby@thecfdme.com>
+Subject: RE: projecting matrix wall clock off the study runs
+Date: Thu, 09 Oct 2025 18:05:00 -0700
+Message-ID: <20251010010500.9c3f7b16@thecfdme.com>
+In-Reply-To: <20251010002200.2e81da45@thecfdme.com>
+References: <20251010002200.2e81da45@thecfdme.com>
+X-Mailer: Microsoft Outlook 16.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+
+Renata —
+
+There is a convention and it is deliberately a plain one. Five points, in order,
+because people get two of them wrong every time.
+
+1. For a fixed mesh, a fixed solver stack and a fixed core count, we take solver
+wall clock as linear in simulated physical time. You establish the rate from a run
+of record on that grid — simulated seconds reached, divided by wall clock consumed
+— and you multiply that rate into the physical duration the production case has to
+cover. That is the entire method. We do not model per-time-step cost and we do not
+try to predict how the adaptive time step will wander over the run; the measured
+rate already carries all of that.
+
+2. Take the rate from the grid the production case will actually run on. Do not
+carry a rate from one grid to another. Cell count and the Courant-limited time step
+both change between grids, they change in the same direction, and they do not
+cancel. If somebody hands you a rate off the coarse grid because it is the
+cheapest number in the file, that is a correct answer to a different question.
+
+3. Quote it per case first, then multiply by the number of cases the governing
+scope document actually procures. Within a matrix every case carries the same mesh
+and the same required physical duration; only the inlet condition changes, and
+changing the inlet does not move the cost. Do not discount for cases you expect to
+restart from a neighbour — we have never made that stick.
+
+4. The number is solver wall clock and nothing else. Exclude queue wait, exclude
+staging, meshing and decomposition, exclude post-processing, and exclude cloud-burst
+provisioning latency. Label it as solver wall clock where you report it, or someone
+will read it as a delivery date.
+
+5. Write the linear-scaling step into the assumptions section of whatever document
+carries the number. It is a projection under a stated assumption, not a measurement,
+and it has to read that way to a client and to me. I will fold this into the next
+revision of the verification standard; until then it is firm practice and this note
+is the record of it.
+
+Nothing here is new. It is the same basis we used to price the Copperline batches.
+
+Marguerite
+
+--
+Marguerite Falk, PE
+Technical Director & Reviewing Engineer
+The CFD ME
+Arizona PE #42798
+4820 E River Rd, Suite 220, Tucson, AZ 85718
++1 (520) 555-0142
+mfalk@thecfdme.com
+
+
+-----Original Message-----
+From: Renata Ellsworth <rellsworth@thecfdme.com>
+To: Marguerite Falk <mfalk@thecfdme.com>
+Subject: projecting matrix wall clock off the study runs
+Date: Thu, 09 Oct 2025 17:22:00 -0700
+Message-ID: <20251010002200.2e81da45@thecfdme.com>
+
+Hi Marguerite —
+
+Quick one before I log off. The three-grid set is finished and written up. Gordon
+has asked what the Section 3.1 matrix is going to cost us in wall clock once we are
+actually running transient, and the only timing I have is what the study runs
+themselves burned.
+
+Is there a firm convention for projecting from a study run to a production run, or
+do I need to do something more careful than a straight ratio? And do I include the
+time the jobs sat in the queue — the fine grid waited most of a shift before it
+picked up a burst allocation, and if that counts the number roughly doubles.
+
+Thanks!
+Renata
+
+--
+Renata Ellsworth
+CFD Engineer
+The CFD ME
+rellsworth@thecfdme.com

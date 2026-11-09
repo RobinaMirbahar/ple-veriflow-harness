@@ -1,0 +1,2 @@
+# written by the kit: git keeps these files byte for byte (no line-ending conversion, no filter such as Git LFS, no $Id$ expansion, no re-encoding)
+* -text -filter -ident -working-tree-encoding

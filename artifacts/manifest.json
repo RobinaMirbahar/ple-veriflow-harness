@@ -1,0 +1,417 @@
+{
+  "format": 1,
+  "dev_set": "2abad45eb9afc758f37db0fbbcd4c6a77d1d566b9518a442706200ec6d88042e",
+  "created": "2026-10-20T03:33:56Z",
+  "harness": {
+    "name": "ple-veriflow-harness",
+    "model_api": "google-cloud/claude-opus-5-5",
+    "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+    "files": {
+      ".gitignore": "100644 3b44610b53014daa82f021db25d070b06d46666a",
+      "AGENTS.md": "100644 e86c4094ea8ab5c5b3b5c99a707783af01f1cd15",
+      "LICENSE": "100644 29f81d812f3e768fa89638d1f72920dbfd1413a8",
+      "README.md": "100644 03dd2b3f55c4c64fbf9aa3ea0e0e6ee96ea4aafa",
+      "figures/ple_cover_banner.png": "100644 ba1a511e8f67718d521d55fa40aeb857be39edd4",
+      "figures/ple_fig1_architecture.png": "100644 2b52a2789a8d638bd5f634fa17de3bc1488dbf44",
+      "figures/ple_fig2_score_vs_cost.png": "100644 4da0e7a574d2ffbcaf4022b4244d2d63c8d61a7d",
+      "figures/ple_fig3_failure_breakdown.png": "100644 4736e47cbace303affad90dd454b3ae8c7eec99c",
+      "harness.py": "100644 bb38e5572bfcb77b0ce57b1f72e2da76da5dc88e",
+      "package-lock.json": "100644 7c139f5e161bd0c73a4ef5e3f6498a5965efc1a5",
+      "package.json": "100644 d2817eebdf9fa3ce6e00c1c4bfb4379ff62befd2",
+      "requirements.txt": "100644 f0a8622cd1ba50a6688cd0b7e5685fad05159901",
+      "serve.py": "100644 0779cd379ce2239f745955050dc6188969a77a4c",
+      "submission.yaml": "100644 2a4f9a3a06862dc620f3c7d7a365c21f7974e94c",
+      "task-tools.ts": "100644 156e8d6027dedc2a57099a83e9676d8993201c87",
+      "taskbridge.py": "100644 b8bf9a164747b00493bfb0c35c981abc27e45e2e"
+    },
+    "commit": "6ab05b9f5f256b4ce148c20498b255712fdfbf26",
+    "dirty": false
+  },
+  "tasks": {
+    "fire-test-validation-memo": {
+      "run": "b96-r1",
+      "trial": "fire-test-validation-memo__b96-r1",
+      "ended": "ok",
+      "reward": 0.807692,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/files/output/CFDME-2025-041_E119_validation_memo_revA.docx": "566482c9d34ff94bbb65733a4206ecc68191d9bd"
+      },
+      "final_message": "b0cc96753462bf0c2135cc49de2d2a8eb9e101cc",
+      "deleted": [],
+      "skipped": []
+    },
+    "eor-review-corrections": {
+      "run": "b96-r1",
+      "trial": "eor-review-corrections__b96-r1",
+      "ended": "ok",
+      "reward": 0.301961,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/dc_structural__eor_revision__blind/output/submission.zip": "4832dbfe062d7355eb7a25253c0e3a4c4e6422a8"
+      },
+      "final_message": "c6b96b1f74a40838ab9cdee7e72a1e44625b7a23",
+      "deleted": [],
+      "skipped": []
+    },
+    "foundation-strategy": {
+      "run": "b96-r1",
+      "trial": "foundation-strategy__b96-r1",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {},
+      "final_message": "f8494dc5016d983aba08d47940afdb34ed7668f4",
+      "deleted": [],
+      "skipped": []
+    },
+    "landscape-sheet-revision": {
+      "run": "b96-r1",
+      "trial": "landscape-sheet-revision__b96-r1",
+      "ended": "ok",
+      "reward": 0.857143,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/files/output/DSR_Ph3_L-4_Street_Tree_Memo_to_Callaway_2026-10-31.docx": "bac67ae3a446ec3d5d0e956498886f44fbb14610"
+      },
+      "final_message": "b89a43dbce60ae5b478fb1e20d2229ba5be626c8",
+      "deleted": [],
+      "skipped": []
+    },
+    "engineers-estimate-check": {
+      "run": "b96-r1",
+      "trial": "engineers-estimate-check__b96-r1",
+      "ended": "ok",
+      "reward": 0.543478,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Correspondence/Client/Memo_to_Callaway_2026-10-31.docx": "bed3f446d302e869172727daa6ff8718b782e16e"
+      },
+      "final_message": "54790e64592ec96d0eccf93953a396a72278a3f0",
+      "deleted": [],
+      "skipped": []
+    },
+    "footing-settlement-verification": {
+      "run": "b96-r1",
+      "trial": "footing-settlement-verification__b96-r1",
+      "ended": "ok",
+      "reward": 0.532258,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Thelbridge_Verification_Memo_Item051_BlockC.docx": "00cc09f32b72f7fb316fa6e75d20e6840a3490af",
+        "filesystem/Thelbridge_Verification_Memo_TEMPLATE_v1.docx": "48b2576d8a5b4b1b7d5e354097c2832a9fc5dcc1"
+      },
+      "final_message": "a2ec98be4f4506385f5dda9e397d1861c6a1d959",
+      "deleted": [],
+      "skipped": []
+    },
+    "solar-supplemental-review": {
+      "run": "b96-r1",
+      "trial": "solar-supplemental-review__b96-r1",
+      "ended": "ok",
+      "reward": 0.207792,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Bramwick_Commons_Screen_Memo.docx": "9c52ad45d5145b229a86e58ecd08e34a7eeebeff"
+      },
+      "final_message": "0dcc8e58ae5e8ba6ae6debb514f31474ff477ada",
+      "deleted": [],
+      "skipped": []
+    },
+    "solar-witness-test-package": {
+      "run": "b96-r1",
+      "trial": "solar-witness-test-package__b96-r1",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {},
+      "final_message": "639d3e2377beb00a358d3aaaca86f3fd2ed625c7",
+      "deleted": [],
+      "skipped": []
+    },
+    "frame-extension-method": {
+      "run": "b96-r1",
+      "trial": "frame-extension-method__b96-r1",
+      "ended": "ok",
+      "reward": 0.8063,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/field_eng__constructability_4d__blind/output/submission.zip": "7ac3a4543eb4907b6495ad249f33e3f0d509d1c2"
+      },
+      "final_message": "4539374869dca74b790fec79105e09c8874531cc",
+      "deleted": [],
+      "skipped": []
+    },
+    "fire-solve-convergence": {
+      "run": "b96-r1",
+      "trial": "fire-solve-convergence__b96-r1",
+      "ended": "ok",
+      "reward": 0.635659,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/20251009_Falk_runtime_projection_basis.eml": "4941845be371059be61c2c51410de88fd97f2370",
+        "filesystem/CFDME-2025-041_transient_solve_disposition_revA.docx": "f55d599a5fcc87da60d65aa621d9c92467c6e175"
+      },
+      "final_message": "cbdb2a6d4cb7b519ade26efd446e5f0380fe9e3f",
+      "deleted": [],
+      "skipped": []
+    },
+    "les-mesh-resolution": {
+      "run": "b96-r1",
+      "trial": "les-mesh-resolution__b96-r1",
+      "ended": "ok",
+      "reward": 0.536585,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/CFDME-2025-041_resolution_note_revA.docx": "591b8c6d0da8020b6cbcc155ea2b3089bf6bfc6a"
+      },
+      "final_message": "857da60f6ec97bc8859feed93c49be651401f247",
+      "deleted": [],
+      "skipped": []
+    },
+    "mv-conveyance-study": {
+      "run": "b96-r1",
+      "trial": "mv-conveyance-study__b96-r1",
+      "ended": "ok",
+      "reward": 0.353437,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__electrical_task12_conveyance_study__blind/output/submission.zip": "66eedecc1a6473d7fa644dee27cc73f069b175e9"
+      },
+      "final_message": "506eaa86d0524d0d2ee3f38bf48e04fb28e2a4cb",
+      "deleted": [],
+      "skipped": []
+    },
+    "data-hall-device-takeoff": {
+      "run": "b96-r1",
+      "trial": "data-hall-device-takeoff__b96-r1",
+      "ended": "ok",
+      "reward": 0.382609,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__electrical_task17_ec_0205_d100__blind/output/submission.zip": "355355e3248ec5d8e50d32b2ec6f9bfccd7c81fd"
+      },
+      "final_message": "4ed1ef96e8182e1c61a66aed229ad7f38cce4459",
+      "deleted": [],
+      "skipped": []
+    },
+    "division-26-specifications": {
+      "run": "b96-r1",
+      "trial": "division-26-specifications__b96-r1",
+      "ended": "ok",
+      "reward": 0.34937,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__electrical_task8_electrical_specs__blind/output/submission.zip": "3d73554b211154fbbb80cf1b19439db5fe4f64c6"
+      },
+      "final_message": "9dd814b90d144211d8f6395c072704ba0fb5917c",
+      "deleted": [],
+      "skipped": []
+    },
+    "heat-rejection-life-cycle-cost": {
+      "run": "b96-r1",
+      "trial": "heat-rejection-life-cycle-cost__b96-r1",
+      "ended": "ok",
+      "reward": 0.692462,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__mechanical_task3_ct_heat_lcc__blind/output/submission.zip": "9208a6a17e7543bc9219afb4fc9c93261ceeef11"
+      },
+      "final_message": "eb3f395d8b2c6b7545d6125fe5287677a594bcb9",
+      "deleted": [],
+      "skipped": []
+    },
+    "cooling-water-flush-plan": {
+      "run": "b96-r1",
+      "trial": "cooling-water-flush-plan__b96-r1",
+      "ended": "ok",
+      "reward": 0.461348,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__mechanical_task5_pcw_flush_mop__blind/output/submission.zip": "e74f18c4b8c165b37188bad80f53a549300dea91"
+      },
+      "final_message": "38c07bf1b823641c5976c489a35e111147a3b74c",
+      "deleted": [],
+      "skipped": []
+    },
+    "wind-diaphragm-shear": {
+      "run": "b96-r1",
+      "trial": "wind-diaphragm-shear__b96-r1",
+      "ended": "ok",
+      "reward": 0.315873,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__structural_task5_wind_diaphragm_shear__blind/output/submission.zip": "5f3f3de5ff41d926753daa47cc41daf909e21350"
+      },
+      "final_message": "00a137e247cbfb57797245a93061c91477bfcf17",
+      "deleted": [],
+      "skipped": []
+    },
+    "seismic-diaphragm-shear": {
+      "run": "b96-r1",
+      "trial": "seismic-diaphragm-shear__b96-r1",
+      "ended": "ok",
+      "reward": 0.315966,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__structural_task6_seismic_diaphragm_shear__blind/output/submission.zip": "78667447d2790a9a7fd3ea3b3d21174c6fe735b4"
+      },
+      "final_message": "cf82e1dc3f014dcc02f372bddb5b4a0c73caee00",
+      "deleted": [],
+      "skipped": []
+    },
+    "roof-deck-design": {
+      "run": "b96-r1",
+      "trial": "roof-deck-design__b96-r1",
+      "ended": "ok",
+      "reward": 0.285714,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/final_batch4__structural_task7_roof_deck_design__blind/output/submission.zip": "9555d494605c6cfd8d3697f763af4a86957032fb"
+      },
+      "final_message": "10fdb9c76c1ee38724f5ab2a0de41c3560e8ed4d",
+      "deleted": [],
+      "skipped": []
+    },
+    "fill-compaction-acceptance": {
+      "run": "b96-r1",
+      "trial": "fill-compaction-acceptance__b96-r1",
+      "ended": "ok",
+      "reward": 0.675926,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Fill_Placement_Records_BlockA_SlabOnGrade.xlsx": "bfd7247c37fb75e2ea09045031d113d36037c244",
+        "filesystem/Thelbridge_Materials_Acceptance_Fill_Compaction_2026-0708.docx": "d9c524dc0a6d2367c01337585e9adc4123970810",
+        "filesystem/Thelbridge_Materials_Acceptance_Record_TEMPLATE.docx": "cb3f2fd5b31bbb62e6eddd0161b03b6f2609ad3d"
+      },
+      "final_message": "f346ec2e4fb18e499c687ca7051d8eb193b4561d",
+      "deleted": [],
+      "skipped": []
+    },
+    "shoring-design-verification": {
+      "run": "b96-r1",
+      "trial": "shoring-design-verification__b96-r1",
+      "ended": "ok",
+      "reward": 0.516393,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Kesterline_31-SH-B_Rev2_Supplement_KE-L-2026-0713.pdf": "6173bae487ab34f4f2ff38f2a95da234b7269a70",
+        "filesystem/Thelbridge_Verification_Memo_Item048_BlockB.docx": "6297b2ff0dedeebcaba4f3af0fc0a9f10a19f9e8",
+        "filesystem/Thelbridge_Verification_Memo_TEMPLATE_v2.docx": "27eb1ad00619b81371fcb4fb2e90f907eef06ff6"
+      },
+      "final_message": "dc512092108cf86f961a5b370d835dfb4c1ddf8f",
+      "deleted": [],
+      "skipped": []
+    },
+    "emergency-spillway-check": {
+      "run": "b96-r1",
+      "trial": "emergency-spillway-check__b96-r1",
+      "ended": "ok",
+      "reward": 0.621622,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/Memo_to_Callaway_Spillway_2026-10-31.docx": "4b91d803f7db45b9617bf5a7e2dd7d18f31547f1"
+      },
+      "final_message": "c6c6ef258996d8565b924a84c2affeb32a7ff214",
+      "deleted": [],
+      "skipped": []
+    },
+    "pre-application-capacity-response": {
+      "run": "b96-r1",
+      "trial": "pre-application-capacity-response__b96-r1",
+      "ended": "ok",
+      "reward": 0.230769,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/output/.helpers_cache/db_diff.log": "43b53d161f6326ed7c5ebfefdd074c7a32da9ded",
+        "app/output/.helpers_cache/db_diff.txt": "c4ba63ba5a498ca3cc3c2a2a5f070b23d6771782",
+        "filesystem/ALN-108_PreApplication_Response.docx": "4c83e645860a1d00f5925078d50ce4cb7cf35e75"
+      },
+      "final_message": "af1dc4744357bc303dc4ce864b627c9123feeba6",
+      "deleted": [],
+      "skipped": []
+    },
+    "permission-to-operate-memo": {
+      "run": "b96-r1",
+      "trial": "permission-to-operate-memo__b96-r1",
+      "ended": "ok",
+      "reward": 0.909091,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/output/.helpers_cache/db_diff.log": "93cda7926441ca64ba591a03d1696bc1d71059e5",
+        "app/output/.helpers_cache/db_diff.txt": "1b97232aa038934dab0a9a4b88d24ff69f5879d1",
+        "filesystem/Corwyn_PTO_Memo.docx": "aaf171f24721e1114b9fa1186fb3aa7587b46b32"
+      },
+      "final_message": "f2fe8d963b5c82b90d18f939cc8a259a88306ab0",
+      "deleted": [],
+      "skipped": []
+    },
+    "backfeed-energization-reply": {
+      "run": "b96-r1",
+      "trial": "backfeed-energization-reply__b96-r1",
+      "ended": "ok",
+      "reward": 1.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/output/.helpers_cache/db_diff.log": "35d7d4dbb2186300a77e38c2622b2691649abcf8",
+        "app/output/.helpers_cache/db_diff.txt": "7d9bf1c8ca0b98c42db2761aaf01991c461a76ab",
+        "filesystem/Halbray_Backfeed_Reply.docx": "f817f75db4f8036d758db7ecd699f88253ec4048"
+      },
+      "final_message": "6f4ec7711df90531a564ad90d54f193f2547c7b7",
+      "deleted": [],
+      "skipped": []
+    },
+    "lv-cable-sizing": {
+      "run": "b96-r1",
+      "trial": "lv-cable-sizing__b96-r1",
+      "ended": "ok",
+      "reward": 0.906575,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "filesystem/electrical__lv_cable_sizing__blind/output/submission.zip": "0807d7478628507517025c1e69533ba11cdadc12"
+      },
+      "final_message": "14cdb51cab5706fc3202be28331a547b15134af6",
+      "deleted": [],
+      "skipped": []
+    },
+    "data-hall-mep-routing": {
+      "run": "run3b",
+      "trial": "data-hall-mep-routing__BWvHgdU",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/files/dc_model__hall_seed000_d000__mep_routing/output/solution.py": "413987bee78e1ce97d9f3d620f5f4d403d57396d"
+      },
+      "final_message": "f52e03796e4885d2a31349c67189d2bebeab739b",
+      "deleted": [],
+      "skipped": []
+    },
+    "data-hall-mep-routing-offset": {
+      "run": "run3b",
+      "trial": "data-hall-mep-routing-offset__Lhzq5k2",
+      "ended": "ok",
+      "reward": 0.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/files/dc_model__hall_seed005_d100__mep_routing/output/solution.py": "1cc103450907d74a7924c2cc8fddbbeefc1005da"
+      },
+      "final_message": "d6b4e2fcef67627e60ae0b2734c41336e380ba1e",
+      "deleted": [],
+      "skipped": []
+    },
+    "data-center-site-model": {
+      "run": "run3b",
+      "trial": "data-center-site-model__TrS75Ym",
+      "ended": "ok",
+      "reward": 1.0,
+      "tree": "36a40e1f9e03a645ced4804ee32bf19ea22ae01f30f0692dbf3937ba67c5b0e1",
+      "files": {
+        "app/files/frontier__DCBim__p6_002/submission/model.ifc": "2202c88f1a7eaa59d4762e4def71de0a7fad50b3"
+      },
+      "final_message": "7756b5a6ccd2ecb640c646fc318a184aa850ed20",
+      "deleted": [],
+      "skipped": []
+    }
+  }
+}
