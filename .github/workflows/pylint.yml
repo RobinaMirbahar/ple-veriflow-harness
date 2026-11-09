@@ -1,4 +1,4 @@
-name: Pylint & Real-Data Verification Suite
+name: Pylint & Verification Suite
 
 on:
   push:
@@ -24,8 +24,8 @@ jobs:
           pip install -r requirements.txt pylint pyyaml
       - name: Analyse harness with pylint
         run: |
-          pylint --indent-string="  " --errors-only serve.py harness.py taskbridge.py tests/test_pe_veriflow_real_data.py
-      - name: Run 3-Gate Real-Data Unit Tests across all 29 PLE Dev Tasks
+          pylint --indent-string="  " --errors-only serve.py harness.py taskbridge.py tests/test_harness.py
+      - name: Run unit and deliverable verification tests
         run: |
           python -m unittest discover -s tests -v
       - name: Verify submission.yaml & manifest.json
