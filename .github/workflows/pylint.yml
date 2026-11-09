@@ -1,23 +1,42 @@
-name: Pylint
+name: Pylint & Manifest Check
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.12"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pylint
-    - name: Analysing the code with pylint
-      run: |
-        pylint $(git ls-files '*.py')
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pylint pyyaml
+      - name: Analyse harness with pylint
+        run: |
+          pylint --indent-string="  " --errors-only serve.py harness.py taskbridge.py
+      - name: Verify submission.yaml & manifest.json
+        run: |
+          python -c "
+          import json, yaml
+          with open('submission.yaml') as f:
+              sub = yaml.safe_load(f)
+          assert sub['name'] == 'ple-veriflow-harness', sub
+          assert sub['model_api'] == 'google-cloud/claude-opus-5-5', sub
+          with open('artifacts/manifest.json') as f:
+              man = json.load(f)
+          assert man['harness']['name'] == sub['name']
+          assert man['harness']['model_api'] == sub['model_api']
+          assert len(man['tasks']) == 29
+          print('Validated submission.yaml & 29 dev-set tasks in artifacts/manifest.json')
+          "
