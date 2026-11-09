@@ -63,13 +63,20 @@ Across the 29 public development tasks in PLE, **78% of baseline failures trace 
 | [`task-tools.ts`](task-tools.ts) | TypeScript extension routing `read`, `write`, `edit`, and `bash` tool calls over HTTP to `taskbridge.Relay` inside the air-gapped task container |
 | [`taskbridge.py`](taskbridge.py) | PLE competition WebSocket protocol implementation, process lifecycle manager, and local HTTP relay |
 | [`package.json`](package.json), [`package-lock.json`](package-lock.json) | Pinned `@earendil-works/pi-coding-agent` (`1.1.0`) dependencies |
+| [`tests/test_pe_veriflow_real_data.py`](tests/test_pe_veriflow_real_data.py) | Automated real-data unit test suite auditing `harness.py` routing/accounting and verifying all 29 real dev-set deliverables in `artifacts/` (SHA-1 blob integrity, 32-circuit `lv-cable-sizing` schedule, LRFD diaphragm shear, 159-row LCC constraint register, IFC4 3D geometry, and geotechnical datum memos) |
 | [`artifacts/`](artifacts/) | Unpacked dev-set deliverables (`files/`), `final_message.md`, `trajectory.json`, and `manifest.json` across all 29 public PLE dev tasks |
 | [`figures/`](figures/) | High-resolution architecture, failure breakdown, score-vs-cost Pareto, and 3D CAD cover figures |
 | [`LICENSE`](LICENSE) | Apache-2.0 License |
 
 ---
 
-## Reproducibility & Verification (`kit check` & `kit artifacts`)
+## Reproducibility, Real-Data Unit Tests & Verification (`kit check` & `kit artifacts`)
+
+Run the real-data unit test suite directly against the 29 unpacked dev-set deliverables in `artifacts/`:
+
+```bash
+python -m unittest discover -s tests -v
+```
 
 From the official [PLE Competition Kit](https://github.com/google-research/ple) checkout alongside this repository:
 
