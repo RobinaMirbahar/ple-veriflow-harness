@@ -5,4 +5,4 @@ __pycache__/
 *.pyc
 runs/
 node_modules/
-*.pdf
+/Robina_Mirbahar_PLE_Paper.pdf
