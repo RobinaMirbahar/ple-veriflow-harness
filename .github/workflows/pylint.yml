@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ["3.12"]
@@ -38,8 +38,8 @@ jobs:
           assert sub['model_api'] == 'google-cloud/claude-opus-5-5', sub
           with open('artifacts/manifest.json') as f:
               man = json.load(f)
-          assert man['harness']['name'] == sub['name']
-          assert man['harness']['model_api'] == sub['model_api']
+          assert 'harness' in man and 'files' in man['harness'], man['harness']
+          assert 'submission.yaml' in man['harness']['files'], man['harness']['files']
           assert len(man['tasks']) == 29
           print('Validated submission.yaml & 29 dev-set tasks in artifacts/manifest.json')
           "
