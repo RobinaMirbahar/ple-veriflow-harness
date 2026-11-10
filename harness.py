@@ -62,6 +62,44 @@ COMPAT = {
 }
 # A model pi's catalog does not know gets these limits; tune them for yours.
 UNKNOWN_MODEL = {"input": ["text"], "contextWindow": 128000, "maxTokens": 16384}
+# Explicit frontier specs for Gemini 4 Carbon & Argon (1M unified context,
+# 64K synchronous output, text + image input) when Pi's bundled catalog predates
+# the model release (e.g. gemini-4-carbon).
+GEMINI_4_MODEL = {
+    "input": ["text", "image"],
+    "contextWindow": 1048576,
+    "maxTokens": 65536,
+}
+
+
+def model_limits(model: str) -> dict[str, Any]:
+  """Returns model capability limits for models absent from Pi's catalog.
+
+  Args:
+    model: Bare model identifier (e.g. `gemini-4-carbon`, `gpt-oss-120b`).
+
+  Returns:
+    Capability dictionary (`input`, `contextWindow`, `maxTokens`).
+  """
+  if model.startswith("gemini-4-"):
+    return dict(GEMINI_4_MODEL)
+  return dict(UNKNOWN_MODEL)
+
+
+def thinking_level(provider_name: str) -> str:
+  """Returns the optimal Pi `--thinking` flag for `provider_name`.
+
+  Per PLE `docs/models.md` and Gemini 4 Carbon/Argon specs, native Gemini API
+  models reason deeper at `high` than at `max`, whereas Claude Opus 5.5 uses
+  `max`.
+
+  Args:
+    provider_name: Pi provider identifier (`anthropic`, `google`, or `model`).
+
+  Returns:
+    The `--thinking` level string (`"high"` for `google`, else `THINKING`).
+  """
+  return "high" if provider_name == "google" else THINKING
 NOTE = (
     "You are an autonomous Principal Physical Engineer working on a graded"
     " engineering task. Your tools act on the task's Linux container, whose"
@@ -166,7 +204,7 @@ def configure(
   # `pi --list-models` reads the provider here
   models.write_text(json.dumps({"providers": {name: config}}))
   if not in_catalog(name, model, env):
-    config["models"] = [{"id": model, "name": model, **UNKNOWN_MODEL}]
+    config["models"] = [{"id": model, "name": model, **model_limits(model)}]
     models.write_text(json.dumps({"providers": {name: config}}))
   settings = {
       "defaultProjectTrust": "never",
@@ -297,7 +335,7 @@ async def solve(session: taskbridge.Session) -> str:
           "--model",
           model,
           "--thinking",
-          THINKING,
+          thinking_level(name),
           "--append-system-prompt",
           NOTE.format(workdir=session.workdir),
       ]

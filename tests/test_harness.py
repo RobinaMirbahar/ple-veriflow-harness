@@ -451,6 +451,84 @@ class TestHarnessVerification(unittest.TestCase):
     self.assertIn("stop_before_sec", tb_code)
     self.assertIn("final_message", tb_code)
 
+  def test_12_gemini_4_carbon_routing_limits_and_thinking(self) -> None:
+    """Verifies `gemini-4-carbon` native Gemini routing, 1M/64K multimodal limits, and `high` thinking."""
+    old_env = os.environ.copy()
+    try:
+      os.environ.clear()
+      os.environ["GOOGLE_GEMINI_BASE_URL"] = "https://generativelanguage.googleapis.com"
+      os.environ["GEMINI_API_KEY"] = "test-carbon-key"
+      os.environ["MODEL_API"] = "gemini/gemini-4-carbon"
+      os.environ["MODEL_NAME"] = "gemini-4-carbon"
+
+      name, cfg = harness.provider()
+      self.assertEqual(name, "google")
+      self.assertEqual(cfg["baseUrl"], "https://generativelanguage.googleapis.com/v1beta")
+      self.assertEqual(cfg["api"], "google-generative-ai")
+      self.assertEqual(cfg["apiKey"], "$GEMINI_API_KEY")
+
+      # Verify Gemini 4 Carbon uses `high` thinking (whereas Anthropic uses `max`)
+      self.assertEqual(harness.thinking_level("google"), "high")
+      self.assertEqual(harness.thinking_level("anthropic"), "max")
+
+      # Verify Gemini 4 Carbon gets 1,048,576 unified context + 65,536 max output + multimodal image input
+      carbon_limits = harness.model_limits("gemini-4-carbon")
+      self.assertEqual(carbon_limits["contextWindow"], 1048576)
+      self.assertEqual(carbon_limits["maxTokens"], 65536)
+      self.assertEqual(carbon_limits["input"], ["text", "image"])
+
+      # Verify `harness.configure()` writes explicit `gemini-4-carbon` specs into `models.json`
+      with tempfile.TemporaryDirectory() as tmp:
+        agent_dir = pathlib.Path(tmp)
+        session = SessionStub(workdir="/app/files")
+        relay = RelayStub()
+        prov_name, mod_name = harness.configure(agent_dir, relay, session, {})
+        self.assertEqual(prov_name, "google")
+        self.assertEqual(mod_name, "gemini-4-carbon")
+
+        models_cfg = json.loads((agent_dir / "models.json").read_text(encoding="utf-8"))
+        google_entry = models_cfg["providers"]["google"]
+        self.assertIn("models", google_entry)
+        self.assertEqual(google_entry["models"][0]["id"], "gemini-4-carbon")
+        self.assertEqual(google_entry["models"][0]["contextWindow"], 1048576)
+        self.assertEqual(google_entry["models"][0]["maxTokens"], 65536)
+        self.assertIn("image", google_entry["models"][0]["input"])
+    finally:
+      os.environ.clear()
+      os.environ.update(old_env)
+
+  def test_13_gemini_4_carbon_implicit_cache_usage_accounting(self) -> None:
+    """Tests `harness.Run` token & implicit-cache accounting for `gemini-4-carbon`."""
+    session = SessionStub()
+    runner = harness.Run(session, "gemini-4-carbon")
+    event = {
+        "type": "message_end",
+        "message": {
+            "role": "assistant",
+            "stopReason": "end_turn",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Gemini 4 Carbon Gate 3 cold-read check passed: all 32 feeders within 5% drop.",
+                }
+            ],
+            "usage": {
+                "input": 18500,
+                "cacheRead": 212000,
+                "cacheWrite": 0,
+                "output": 4620,
+            },
+        },
+    }
+    asyncio.run(runner.on_line(json.dumps(event).encode("utf-8")))
+    self.assertEqual(runner.replies, 1)
+    self.assertIn("Gemini 4 Carbon Gate 3", session.final_message)
+    self.assertEqual(len(session.usages), 1)
+    self.assertEqual(session.usages[0]["model"], "gemini-4-carbon")
+    self.assertEqual(session.usages[0]["input_tokens"], 230500)
+    self.assertEqual(session.usages[0]["cache_read_tokens"], 212000)
+    self.assertEqual(session.usages[0]["output_tokens"], 4620)
+
 
 if __name__ == "__main__":
   unittest.main(verbosity=2)

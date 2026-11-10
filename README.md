@@ -24,13 +24,14 @@ Across the 29 public development tasks in PLE, **78% of baseline failures trace 
 | + **Gate 3:** Independent Cold-Read Deliverable Verifier | 0.469 | 0.291 | 0.589 | 0.461 | 0.429 | 16.85 |
 | **Submitted (`ple-veriflow-harness` + 120s Reserve + Cache)** | **0.491** | **0.305** | **0.617** | **0.482** | **0.448** | **3.42** |
 
-### Cross-Model Generalizability Across Sponsored Models
+### Cross-Model Generalizability Across Sponsored & Local Frontier Models
 
 | `model_api` | Family | Baseline | **PE-VeriFlow** | Delta | Tokens (in / out / cached) | USD/task |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **`gemini/gemini-4-carbon`** *(Local BYO Key)* | Google Gemini 4 | 0.374 | **0.504** | **+0.130** | 1.48M / 79k / 1.33M (89.9%) | **1.22** |
 | **`google-cloud/claude-opus-5-5`** *(Committed)* | Anthropic Claude | 0.310 | **0.491** | **+0.181** | 1.84M / 64k / 1.68M (91.4%) | **3.42** |
-| **`google-cloud/gemini-4-argon`** | Google Gemini | 0.348 | **0.462** | **+0.114** | 1.52M / 58k / 1.31M (86.2%) | **2.68** |
-| **`google-cloud/gemini-3.8-flash`** | Google Gemini | 0.296 | **0.408** | **+0.112** | 1.61M / 61k / 1.38M (85.7%) | **0.89** |
+| **`google-cloud/gemini-4-argon`** | Google Gemini 4 | 0.348 | **0.462** | **+0.114** | 1.52M / 58k / 1.31M (86.2%) | **2.68** |
+| **`google-cloud/gemini-3.8-flash`** | Google Gemini 3.8 | 0.296 | **0.408** | **+0.112** | 1.61M / 61k / 1.38M (85.7%) | **0.89** |
 | **`google-cloud/gpt-oss-120b`** | Open-Weight | 0.241 | **0.338** | **+0.097** | 1.28M / 49k / 1.02M (79.7%) | **0.58** |
 
 ---
@@ -63,7 +64,8 @@ Across the 29 public development tasks in PLE, **78% of baseline failures trace 
 | [`task-tools.ts`](task-tools.ts) | TypeScript extension routing `read`, `write`, `edit`, and `bash` tool calls over HTTP to `taskbridge.Relay` inside the air-gapped task container |
 | [`taskbridge.py`](taskbridge.py) | PLE competition WebSocket protocol implementation, process lifecycle manager, and local HTTP relay |
 | [`package.json`](package.json), [`package-lock.json`](package-lock.json) | Pinned `@earendil-works/pi-coding-agent` (`1.1.0`) dependencies |
-| [`tests/test_harness.py`](tests/test_harness.py) | Unit and deliverable verification test suite covering `harness.py` routing/accounting and checking the 29 dev-set deliverables in `artifacts/` (`wire_schedule.csv`, LRFD diaphragm shear, LCC constraint register, IFC4 geometry, and geotechnical memos) |
+| [`tests/test_harness.py`](tests/test_harness.py) | Unit and deliverable verification test suite covering `harness.py` routing/accounting (including `gemini-4-carbon` 1M/64K multimodal limits and `high` thinking) and checking the 29 dev-set deliverables in `artifacts/` (`wire_schedule.csv`, LRFD diaphragm shear, LCC constraint register, IFC4 geometry, and geotechnical memos) |
+| [`notebooks/ple_hard_gate_veriflow_notebook.ipynb`](notebooks/ple_hard_gate_veriflow_notebook.ipynb) | Self-contained Kaggle companion notebook reproducing the `91% -> 41.3%` hard-gate cliff (`arXiv:2610.30537`) on a real coupled Neher-McGrath 12-duct thermal, lug-capped voltage-drop, and 3D spatial clash corpus |
 | [`artifacts/`](artifacts/) | Unpacked dev-set deliverables (`files/`), `final_message.md`, `trajectory.json`, and `manifest.json` across all 29 public PLE dev tasks |
 | [`figures/`](figures/) | High-resolution architecture, failure breakdown, score-vs-cost Pareto, and 3D CAD cover figures |
 | [`LICENSE`](LICENSE) | Apache-2.0 License |
