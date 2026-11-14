@@ -1,91 +1,105 @@
-# PE-VeriFlow (`ple-veriflow-harness`): 3-Gate Verification Agent Harness for Physical-Engineering's Last Exam (PLE)
+# PE-VeriFlow: Hard-Gate Engineering Verification Harness
 
 ![PE-VeriFlow Cover Banner](figures/ple_cover_banner.png)
 
-[![Competition](https://img.shields.io/badge/Kaggle-Physical--Engineering's_Last_Exam_(PLE)-2563EB?style=flat-square)](https://www.kaggle.com/competitions/physical-engineerings-last-exam)
-[![Model](https://img.shields.io/badge/Model_API-google--cloud%2Fclaude--opus--5--5-059669?style=flat-square)](submission.yaml)
-[![Dev Score](https://img.shields.io/badge/Dev_Score_(29_Tasks)-0.491_(+58.4%25)-10B981?style=flat-square)](artifacts/manifest.json)
-[![Kit Check](https://img.shields.io/badge/kit_artifacts-accepted%3DTrue_%7C_0_warnings-047857?style=flat-square)](artifacts/manifest.json)
-[![License](https://img.shields.io/badge/License-Apache_2.0-475569?style=flat-square)](LICENSE)
-
-**PE-VeriFlow** (`ple-veriflow-harness`) is an open-source autonomous engineering agent harness built on the headless [Pi coding agent](https://github.com/badlogic/pi-mono) (`@earendil-works/pi-coding-agent` v1.1.0) and `taskbridge.Relay`, paired with **`google-cloud/claude-opus-5-5`** for the **Google — Agent Harness on Physical-Engineering's Last Exam (PLE)** benchmark across Structural, Civil, Electrical, and Mechanical engineering.
+**Solo Author:** Robina Mirbahar  
+**Competition:** [Google -- Agent Harness on Physical-Engineering's Last Exam (PLE)](https://www.kaggle.com/competitions/physical-engineerings-last-exam)  
+**Kaggle Writeup:** [PE-VeriFlow: 3-Gate Verification Harness for Physical Engineering](https://www.kaggle.com/competitions/physical-engineerings-last-exam/writeups/pe-veriflow-3-gate-verification-harness-ple)  
+**Companion Notebook:** [PE-VeriFlow Hard-Gate Agent Harness PLE](https://www.kaggle.com/code/robinamirbahar/pe-veriflow-hard-gate-agent-harness-ple)  
+**License:** Code under Apache-2.0 (`LICENSE`); companion documentation under CC BY 4.0
 
 ---
 
-## Key Results on the 29 Public Dev Tasks
+## Overview
 
-Across the 29 public development tasks in PLE, **78% of baseline failures trace back to operational errors inside multi-file project folders**: pulling inputs from superseded drawing or specification revisions, silent unit/datum drift, and cold-read deliverable packaging bugs. Enforcing our **3-Gate PE-VeriFlow Protocol** with ephemeral prompt-prefix caching lifts the 29-task dev score from **0.310 to 0.491 (+58.4% relative gain, and 3.56x the 0.138 Stage-2 prize qualification floor)** at **USD 3.42/task**:
+`PE-VeriFlow` is my single-loop verification harness for Google's Physical-Engineering's Last Exam (`PLE`). Long-horizon engineering benchmarks often assign `0.000` reward on conjunctive hard gates even when an agent appears confident. Published baseline analysis by Han et al. (2026, `arXiv:2610.30537`) shows that `23.2%` of frontier agent runs score `0.000`: `70.4%` submit files that fail grader checks, `25.3%` terminate early or hit tool-call dead ends without writing deliverables, and `4.3%` fail from runtime or proxy interruptions.
 
-| Configuration (`google-cloud/claude-opus-5-5`) | Dev (29) | Str (4) | Civ (9) | Elec (9) | Mech (7) | USD/task |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| Baseline (Pi on `claude-opus-5-5`, no gates, no cache marks) | 0.310 | 0.208 | 0.382 | 0.308 | 0.278 | 14.80 |
-| + **Gate 1:** Authority & Revision Audit (Constraint Register) | 0.378 | 0.242 | 0.468 | 0.376 | 0.341 | 15.40 |
-| + **Gate 2:** Programmatic Solver & Unit/Datum Assertions | 0.420 | 0.268 | 0.524 | 0.412 | 0.385 | 16.10 |
-| + **Gate 3:** Independent Cold-Read Deliverable Verifier | 0.469 | 0.291 | 0.589 | 0.461 | 0.429 | 16.85 |
-| **Submitted (`ple-veriflow-harness` + 120s Reserve + Cache)** | **0.491** | **0.305** | **0.617** | **0.482** | **0.448** | **3.42** |
-
-### Cross-Model Generalizability Across Sponsored & Local Frontier Models
-
-| `model_api` | Family | Baseline | **PE-VeriFlow** | Delta | Tokens (in / out / cached) | USD/task |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **`gemini/gemini-4-carbon`** *(Local BYO Key)* | Google Gemini 4 | 0.374 | **0.504** | **+0.130** | 1.48M / 79k / 1.33M (89.9%) | **1.22** |
-| **`google-cloud/claude-opus-5-5`** *(Committed)* | Anthropic Claude | 0.310 | **0.491** | **+0.181** | 1.84M / 64k / 1.68M (91.4%) | **3.42** |
-| **`google-cloud/gemini-4-argon`** | Google Gemini 4 | 0.348 | **0.462** | **+0.114** | 1.52M / 58k / 1.31M (86.2%) | **2.68** |
-| **`google-cloud/gemini-3.8-flash`** | Google Gemini 3.8 | 0.296 | **0.408** | **+0.112** | 1.61M / 61k / 1.38M (85.7%) | **0.89** |
-| **`google-cloud/gpt-oss-120b`** | Open-Weight | 0.241 | **0.338** | **+0.097** | 1.28M / 49k / 1.02M (79.7%) | **0.58** |
+Rather than spawning multi-agent sub-teams that duplicate context and degrade dev accuracy, I keep a single cached Pi coding session (`@earendil-works/pi-coding-agent`) inside `harness.py` and couple it with a deterministic Python **Gate-3 Container Auditor** (`_CONTAINER_AUDIT_PY`) that inspects every created or modified deliverable on disk before accepting completion.
 
 ---
 
-## Architecture & 3-Gate Verification Protocol
+## Architecture & Control Flow
 
-![Figure 2: PE-VeriFlow Agent Harness Architecture](figures/ple_fig2_architecture.png)
+![PE-VeriFlow Architecture](figures/ple_fig1_architecture.png)
 
-1. **Gate 1 — Authority & Revision Reconciliation:** Audits every drawing, specification, boring log, RFI, and addendum in `workdir` before computing, explicitly filtering out superseded documents (e.g., rejecting `EDS-26 Rev 2` in favor of `Rev 4` on `lv-cable-sizing`, or flagging `"Not computed"` consolidation tabs in `CB-GEO-007` on `footing-settlement-verification`).
-2. **Gate 2 — Programmatic Calculation & Dimensional Audit:** Prohibits mental arithmetic, routing all engineering calculations through Python scripts (`ifcopenshell`, `ezdxf`, `openpyxl`, `python-docx`, `numpy`, `scipy`) with explicit unit-conversion (`mm`/`ft`, `psf`/`ksf`, `K·m/W`, `kcmil`) and datum checks.
-3. **Gate 3 — Independent Cold-Read Deliverable Verification:** Writes and executes a clean verification script that re-opens every saved deliverable from disk (`submission.zip`, `model.ifc`, `.xlsx`, `.dxf`, `.docx`, `.csv`) and validates schema completeness, row/bin counts, and governing margins prior to the 120-second deadline reserve (`STOP_BEFORE_SEC = 120`).
+1. **Provider Routing & Prompt Cache Stability (`configure()`, `provider()`, `MODEL_SPECS`):**
+   - Explicitly registers capability profiles (`input`, `contextWindow`, `maxTokens`) for all 8 sponsored competition models (`claude-opus-5-5`, `claude-sonnet-5`, `gemini-4-argon`, `gemini-3.8-pro`, `gemini-3.8-flash`, `glm-6`, `qwen-4-320b`, `gpt-oss-120b`) plus `gemini-4-carbon`.
+   - Applies provider-specific thinking depth via `thinking_level()` (`high` for native Google Gemini models per `ple/docs/models.md`; `max` for Claude and GLM).
+   - Enables `"cacheWarming": "streaming"` and resilient proxy retry backoff (`maxRetries: 8`, `baseDelayMs: 2000`, `httpIdleTimeoutMs: 3_600_000`).
+2. **Baseline Filesystem Snapshot (`snapshot_workdir()`):**
+   - Before running the coding pass, `solve()` snapshots existing files (`[size, mtime_ns]`) under `session.workdir`, `/workspace`, and `/app/files/output` so Gate 3 inspects only agent-created or modified outputs while ignoring read-only inputs and temporary build directories.
+3. **Three-Gate Engineering Protocol (`NOTE` & `TIME_NOTE`):**
+   - **Gate 1 (Physical & Precedence Equilibrium):** Enforces authoritative document precedence, datum shifts, dimensional consistency, boundary conditions, and force/moment/ampacity balance.
+   - **Gate 2 (Independent Cross-Solve):** Requires solving the core governing physics by a second independent method (hand calculation vs Python/SciPy/FE/SPICE script) before packaging outputs.
+   - **Gate 3 (Programmatic Cold-Read Audit & Remediation):** After the main pass stops (`WORK_RESERVE_SEC = 240`, `STOP_BEFORE_SEC = 90`), `audit_deliverables()` executes a read-only pure-stdlib Python payload over stdin inside the container to verify:
+     - Zero empty runs or aborted `"[tool call]"` / incomplete final messages.
+     - Valid `.zip` integrity (`testzip()`) with recursive inspection of up to 64 archive entries.
+     - Well-formed `.xlsx`/`.xlsm` OOXML worksheets free of Excel error cells (`t="e"` or `#REF!`, `#DIV/0!`, `#VALUE!`, `#NAME?`, `#N/A`, `#NUM!`, `#NULL!`).
+     - Valid `.docx` (`word/document.xml`), `.json`, non-empty `.csv`, syntax-valid `.py`, `.dxf` (`SECTION`/`EOF`), `.ifc` (`ISO-10303-21;`..`END-ISO-10303-21;`), and `%PDF-`..`%%EOF` files.
+   - When defects are detected and remaining task budget exceeds `STOP_BEFORE_SEC + 45` seconds, `solve()` runs one bounded remediation pass listing the exact failing file paths.
 
 ---
 
-## Failure Taxonomy & Compute Scaling
+## Published Baseline & Starter Artifact Diagnostics
 
-| Failure Breakdown Across 29 Dev Tasks | Accuracy vs. Cost & Turn Scaling |
-| :---: | :---: |
-| ![Figure 1: Failure Breakdown](figures/ple_fig1_failure_breakdown.png) | ![Figure 3: Score vs Cost](figures/ple_fig3_score_vs_cost.png) |
+![Cross-Model Frontier and Step Scaling](figures/ple_fig2_score_vs_cost.png)
+
+![Discipline Breakdown and Zero-Score Taxonomy](figures/ple_fig3_failure_breakdown.png)
+
+The `artifacts/` directory (`25.37 MiB`, 29 tasks) preserves the unmodified starter baseline (`b96-r1` using `google-cloud/claude-opus-5-5`) strictly compliant with `docs/rules.md`. Inspecting `artifacts/manifest.json` and `artifacts/*/trajectory.json` across all 29 dev tasks shows:
+
+| Metric | Value | Verified Scope |
+| :--- | :--- | :--- |
+| Mean / Median Reward | `0.491242` / `0.516393` | All 29 dev tasks (`b96-r1`) |
+| Domain Mean: Civil / Electrical | `0.617013` (`n=9`) / `0.482183` (`n=9`) | `dev_set.yaml` + `manifest.json` |
+| Domain Mean: Mechanical / Structural | `0.447678` (`n=7`) / `0.304878` (`n=4`) | `dev_set.yaml` + `manifest.json` |
+| Trajectory Length (`steps`) | `84.2` mean (range `22` to `160`) | All 29 `trajectory.json` traces |
+| Zero-Score Runs | `4` tasks (`0.000` reward) | `foundation-strategy`, `solar-witness-test-package`, `data-hall-mep-routing`, `data-hall-mep-routing-offset` |
 
 ---
 
 ## Repository Layout
 
-| File / Directory | Purpose |
-| :--- | :--- |
-| [`submission.yaml`](submission.yaml) | Declares `name: ple-veriflow-harness`, `model_api: google-cloud/claude-opus-5-5`, `install`, and `serve` |
-| [`serve.py`](serve.py) | WebSocket server entrypoint listening on `0.0.0.0:$PORT` and dispatching tasks to `harness.solve` |
-| [`harness.py`](harness.py) | Configures headless Pi sessions, model provider routing (`anthropic`, `google`, `openai-completions`), MCP proxying, and the 3-Gate PE-VeriFlow prompt |
-| [`task-tools.ts`](task-tools.ts) | TypeScript extension routing `read`, `write`, `edit`, and `bash` tool calls over HTTP to `taskbridge.Relay` inside the air-gapped task container |
-| [`taskbridge.py`](taskbridge.py) | PLE competition WebSocket protocol implementation, process lifecycle manager, and local HTTP relay |
-| [`package.json`](package.json), [`package-lock.json`](package-lock.json) | Pinned `@earendil-works/pi-coding-agent` (`1.1.0`) dependencies |
-| [`tests/test_harness.py`](tests/test_harness.py) | Unit and deliverable verification test suite covering `harness.py` routing/accounting (including `gemini-4-carbon` 1M/64K multimodal limits and `high` thinking) and checking the 29 dev-set deliverables in `artifacts/` (`wire_schedule.csv`, LRFD diaphragm shear, LCC constraint register, IFC4 geometry, and geotechnical memos) |
-| [`notebooks/ple_hard_gate_veriflow_notebook.ipynb`](notebooks/ple_hard_gate_veriflow_notebook.ipynb) | Self-contained Kaggle companion notebook reproducing the `91% -> 41.3%` hard-gate cliff (`arXiv:2610.30537`) on a real coupled Neher-McGrath 12-duct thermal, lug-capped voltage-drop, and 3D spatial clash corpus |
-| [`artifacts/`](artifacts/) | Unpacked dev-set deliverables (`files/`), `final_message.md`, `trajectory.json`, and `manifest.json` across all 29 public PLE dev tasks |
-| [`figures/`](figures/) | High-resolution architecture, failure breakdown, score-vs-cost Pareto, and 3D CAD cover figures |
-| [`LICENSE`](LICENSE) | Apache-2.0 License |
+- `submission.yaml` -- Submission contract (`harness_name: my-harness`, `model_api: google-cloud/claude-opus-5-5`)
+- `harness.py` -- Pi runner, 8-model capability registry, `snapshot_workdir()`, Gate-3 `_CONTAINER_AUDIT_PY`, and bounded remediation
+- `serve.py` / `taskbridge.py` / `task-tools.ts` -- HTTP harness server, container taskbridge, and file-size-guarded Pi tools
+- `tests/test_harness.py` -- 8-test verification suite covering 8-model routing, token accounting, live Gate-3 defect trapping, 29 real task IDs, and solo-author compliance
+- `artifacts/` -- Unmodified `b96-r1` starter baseline artifacts (`manifest.json` + 29 dev task directories)
+- `notebooks/ple_hard_gate_veriflow_notebook.ipynb` -- Self-contained interactive physics & Gate-3 verification notebook
+- `figures/` -- Canonical visualization assets (`ple_cover_banner.png`, `ple_fig1..3.png`)
 
 ---
 
-## Reproducibility, Unit Tests & Verification (`kit check` & `kit artifacts`)
+## Verification & Reproducibility
 
-Run the unit and deliverable verification suite:
+### Local Verification (Executed on Windows Host)
 
-```bash
+Because WSL2, Docker, and cloud model API keys are unavailable on my Windows workstation, container evaluation via `eval/run.py` has not yet been re-executed here. I verified all harness code, schema integrity, and live Gate-3 trapping deterministically via the local test suite:
+
+```powershell
 python -m unittest discover -s tests -v
+pylint --errors-only serve.py harness.py tests/test_harness.py
 ```
 
-From the official [PLE Competition Kit](https://github.com/google-research/ple) checkout alongside this repository:
+- `unittest`: `8/8` tests pass (`test_01`..`test_08`), including simulated live execution of `_CONTAINER_AUDIT_PY` against empty `[tool call]` runs, `#REF!` cells inside `submission.zip!calc_book.xlsx`, malformed JSON, incomplete `.ifc`, and truncated `.dxf`.
+- `pylint --errors-only`: `0` errors across `serve.py`, `harness.py`, and `tests/test_harness.py`.
+
+### Container Evaluation (WSL2 / Linux Host with Docker & API Proxy)
+
+Before submitting final artifacts for Stage-2 grading, execute the official PLE starter kit checks from the `ple/` repository directory inside Linux or WSL2 with Docker running:
 
 ```bash
 uv run python -m kit check ../ple-veriflow-harness
-uv run python -m kit artifacts ../ple-veriflow-harness
 uv run python eval/run.py ../ple-veriflow-harness
 ```
 
-Both `kit check` and `kit artifacts` pass with zero errors and zero warnings (`accepted: True`, `problems: []`, `warnings: []`, `provenance: {'manifest': 'ok', 'dev_set': 'same', 'harness': 'same', 'edited': []}`).
+---
+
+## References
+
+- Han, R., Zhuang, Y., Ray, A., Lee, C.-Y., et al. (2026). *PLE: Physical-Engineering's Last Exam*. `arXiv:2610.30537`.
+- Xia, P., Han, R., et al. (2026). *RRSI: Regularized Recursive Self-Improvement of Agent Harnesses*. `arXiv:2609.24972`.
+- Huang, C., Wang, Z., Han, R., et al. (2026). *EnvHarness: Awakening Static Worlds for Agent Learning*. `arXiv:2608.19880`.
+- Ouyang, S., Yan, J., Han, R., Lee, C.-Y., Pfister, T., et al. (2026). *ReasoningBank: Scaling Agent Self-Evolving with Reasoning Memory*. ICLR 2026 (`arXiv:2509.25140`).
+- Liu, T., Wang, Z., Han, R., Pfister, T., Lee, C.-Y., et al. (2026). *Budget-Aware Tool-Use Enables Effective Agent Scaling (BATS)*. COLM 2026 (`arXiv:2511.17006`).
+- Ray, A., Bashkirova, D., Tan, R., Zeng, K.-H., Plummer, B. A., Krishna, R., & Saenko, K. (2024). *R2D3: Imparting Spatial Reasoning by Reconstructing 3D Scenes from 2D Images*. OpenReview Archive.

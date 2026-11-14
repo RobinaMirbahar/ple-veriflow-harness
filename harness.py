@@ -1,4 +1,5 @@
 # Copyright 2026 Google LLC
+# Modified 2026 Robina Mirbahar
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,30 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Pi coding agent harness (`@earendil-works/pi-coding-agent`).
+"""PE-VeriFlow Pi coding agent harness (`@earendil-works/pi-coding-agent`).
 
-Runs one headless Pi session per task. Pi runs in the serve container while the
-task's files live in the task container. `task-tools.ts` replaces Pi's built-in
-`read`, `write`, `edit`, and `bash` tools with versions that operate on the task
-container through `taskbridge.Relay`, and the task's MCP servers are proxied
-through the same relay. Pi's agent loop handles model calls, tool execution,
-retries, and conversation compaction, returning its last response as the final
-message.
-
-The model is configured from the environment variables set by the evaluator in
-`models.json` for each task. Claude and Gemini models use their native APIs
-under Pi's built-in provider names (`anthropic` and `google`) so Pi's catalog
-supplies their limits, thinking support, and image input capabilities. Any other
-model uses the OpenAI-compatible `MODEL_BASE_URL` and `MODEL_API_KEY` under a
-custom `model` provider with `UNKNOWN_MODEL` limits.
+Runs a headless Pi session per task with three concrete mechanisms:
+1. Streaming prompt-cache warming (`cacheWarming: "streaming"`), 1-hour HTTP
+   idle timeout for extended reasoning streams, and 8 exponential retries.
+2. Explicit capability profiles (`MODEL_SPECS`) and reasoning effort routing
+   across all eight sponsored `google-cloud/*` models and local BYO models.
+3. A domain-agnostic programmatic Gate-3 cold-read deliverable auditor
+   (`audit_deliverables`) that inspects generated artifacts inside the task
+   container and runs one bounded remediation turn if structural, schema,
+   formula, geometry, syntax, or empty-summary defects are found.
 """
 
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import pathlib
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -44,14 +42,20 @@ from typing import Any
 import taskbridge
 
 HERE = pathlib.Path(__file__).resolve().parent
-# npm ci, from package-lock.json
 PI = shutil.which("pi") or str(HERE / "node_modules" / ".bin" / "pi")
-# pi's --thinking level: off, minimal, low, medium, high, xhigh or max
 THINKING = "max"
-# stop pi this long before the deadline (less on short tasks) so its answer
-# arrives
-STOP_BEFORE_SEC = 120
+WORK_RESERVE_SEC = 240
+STOP_BEFORE_SEC = 90
+MIN_RECOVERY_SEC = 150
 CATALOG_TIMEOUT_SEC = 30
+# Match pi-opus cache warming, backoff retries, and 1-hour silent stream limit.
+SETTINGS = {
+    "defaultProjectTrust": "never",
+    "quietStartup": True,
+    "cacheWarming": "streaming",
+    "retry": {"maxRetries": 8, "baseDelayMs": 2000, "maxAgentDelayMs": 60000},
+    "httpIdleTimeoutMs": 3_600_000,
+}
 # Request features the Google Cloud route for Claude refuses. pi leaves them
 # out, and the Anthropic API works without them too.
 COMPAT = {
@@ -60,71 +64,278 @@ COMPAT = {
     "supportsMidConvoSystemMessages": False,
     "supportsMidConvoToolChanges": False,
 }
-# A model pi's catalog does not know gets these limits; tune them for yours.
+# Fallback limits when a model is absent from both Pi's catalog and MODEL_SPECS.
 UNKNOWN_MODEL = {"input": ["text"], "contextWindow": 128000, "maxTokens": 16384}
-# Explicit frontier specs for Gemini 4 Carbon & Argon (1M unified context,
-# 64K synchronous output, text + image input) when Pi's bundled catalog predates
-# the model release (e.g. gemini-4-carbon).
 GEMINI_4_MODEL = {
     "input": ["text", "image"],
     "contextWindow": 1048576,
     "maxTokens": 65536,
 }
+MODEL_SPECS: dict[str, dict[str, Any]] = {
+    "claude-opus-5-5": {
+        "input": ["text", "image"],
+        "contextWindow": 200000,
+        "maxTokens": 32000,
+    },
+    "gemini-4-argon": dict(GEMINI_4_MODEL),
+    "gemini-4-carbon": dict(GEMINI_4_MODEL),
+    "gemini-3.8-flash": dict(GEMINI_4_MODEL),
+    "gemini-3.1-pro-preview": dict(GEMINI_4_MODEL),
+    "gpt-oss-120b": {
+        "input": ["text"],
+        "contextWindow": 131072,
+        "maxTokens": 32768,
+    },
+    "glm-5.2": {
+        "input": ["text"],
+        "contextWindow": 200000,
+        "maxTokens": 32768,
+    },
+    "gemma-4-26b": {
+        "input": ["text", "image"],
+        "contextWindow": 262144,
+        "maxTokens": 32768,
+    },
+    "llama-4-maverick": {
+        "input": ["text", "image"],
+        "contextWindow": 1048576,
+        "maxTokens": 32768,
+    },
+}
 
-
-def model_limits(model: str) -> dict[str, Any]:
-  """Returns model capability limits for models absent from Pi's catalog.
-
-  Args:
-    model: Bare model identifier (e.g. `gemini-4-carbon`, `gpt-oss-120b`).
-
-  Returns:
-    Capability dictionary (`input`, `contextWindow`, `maxTokens`).
-  """
-  if model.startswith("gemini-4-"):
-    return dict(GEMINI_4_MODEL)
-  return dict(UNKNOWN_MODEL)
-
-
-def thinking_level(provider_name: str) -> str:
-  """Returns the optimal Pi `--thinking` flag for `provider_name`.
-
-  Per PLE `docs/models.md` and Gemini 4 Carbon/Argon specs, native Gemini API
-  models reason deeper at `high` than at `max`, whereas Claude Opus 5.5 uses
-  `max`.
-
-  Args:
-    provider_name: Pi provider identifier (`anthropic`, `google`, or `model`).
-
-  Returns:
-    The `--thinking` level string (`"high"` for `google`, else `THINKING`).
-  """
-  return "high" if provider_name == "google" else THINKING
 NOTE = (
     "You are an autonomous Principal Physical Engineer working on a graded"
     " engineering task. Your tools act on the task's Linux container, whose"
     " working directory is {workdir}; it has no internet access.\n"
     "Follow the 3-Gate PE-VeriFlow Verification Protocol before finishing:\n"
     "1. Gate 1 (Authority & Revision Reconciliation): Inspect every file in"
-    " {workdir}. Reject superseded revisions (e.g., earlier Revs when a newer"
-    " Rev or RFI/Addendum governs) and reconcile drawing callouts against"
-    " project specifications and geotechnical/code tables.\n"
+    " {workdir}. Reject superseded revisions when a newer revision, RFI, or"
+    " addendum governs, and reconcile drawing callouts against project"
+    " specifications and governing code tables.\n"
     "2. Gate 2 (Programmatic Calculation & Dimensional Audit): Compute all"
     " engineering quantities with Python scripts rather than mental arithmetic."
-    " Explicitly verify unit conversions (imperial/SI, psf/ksf, kcmil/ampacity,"
-    " mm/ft) and boundary conditions.\n"
-    "3. Gate 3 (Independent Cold-Read Deliverable & Hard-Gate Survival Check):"
-    " In PLE grading, failing a single hard safety or schema check zeroes out"
-    " the entire cost-optimization score (the 91%-constraint vs 41.3%-pass"
-    " gap). Write every required deliverable to the exact path and schema"
-    " requested, then run an independent Python verifier that re-opens each"
-    " saved deliverable from disk (ZIP/XLSX/DXF/IFC/DOCX/CSV) and asserts"
-    " 100% hard-safety-gate survival, row/column completeness, and governing"
-    " margins before exiting.\n"
-    "When you are done, reply with a concise engineering summary of what you"
-    " delivered, where each file is located, the governing design values, and"
-    " how each deliverable was verified."
+    " Verify unit conversions (imperial/SI, psf/ksf, kcmil/ampacity, mm/ft)"
+    " and elevation or coordinate datums.\n"
+    "3. Gate 3 (Independent Cold-Read Deliverable Check): Write every required"
+    " deliverable to the exact path and format requested, re-open saved files"
+    " from disk with Python before exiting to verify zero empty or malformed"
+    " outputs, and report exact file paths and governing design values."
 )
+TIME_NOTE = (
+    " You have about {minutes} minutes in all; leave time to finish and check"
+    " all deliverables."
+)
+
+# Executed inside the task container to snapshot modified files and run cold-read
+# deliverable validation using only Python's standard library.
+_CONTAINER_AUDIT_PY = r"""
+import ast
+import csv
+import io
+import json
+import os
+import pathlib
+import sys
+import xml.etree.ElementTree as ET
+import zipfile
+
+EXCEL_ERRORS = ("#REF!", "#DIV/0!", "#VALUE!", "#NAME?", "#NUM!")
+IGNORE_DIRS = {".git", "__pycache__", ".venv", "node_modules"}
+
+def scan_files(roots):
+  out = {}
+  seen_dirs = set()
+  for raw in roots:
+    root = pathlib.Path(raw)
+    if not root.exists():
+      continue
+    try:
+      resolved = str(root.resolve())
+    except OSError:
+      resolved = str(root)
+    if resolved in seen_dirs:
+      continue
+    seen_dirs.add(resolved)
+    for cur, dirs, files in os.walk(root):
+      dirs[:] = [d for d in sorted(dirs) if d not in IGNORE_DIRS]
+      for fname in sorted(files):
+        fpath = pathlib.Path(cur) / fname
+        if fpath.is_symlink():
+          continue
+        try:
+          st = fpath.stat()
+          out[str(fpath)] = [st.st_size, st.st_mtime_ns]
+        except OSError:
+          continue
+        if len(out) >= 25000:
+          return out
+  return out
+
+def check_xlsx(data, label, defects):
+  try:
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+      names = set(zf.namelist())
+      if "xl/workbook.xml" not in names:
+        defects.append(f"{label}: missing xl/workbook.xml")
+        return
+      for name in names:
+        if name.startswith("xl/worksheets/") and name.endswith(".xml"):
+          xml_raw = zf.read(name)
+          try:
+            root = ET.fromstring(xml_raw)
+          except ET.ParseError as exc:
+            defects.append(f"{label} ({name}): invalid XML ({exc})")
+            return
+          for cell in root.iter():
+            if (cell.tag == "c" or cell.tag.endswith("}c")) and cell.attrib.get("t") == "e":
+              defects.append(f"{label} ({name}): Excel error cell")
+              return
+          xml_text = xml_raw.decode("utf-8", errors="ignore")
+          for err in EXCEL_ERRORS:
+            if f"<v>{err}</v>" in xml_text or f"<t>{err}</t>" in xml_text:
+              defects.append(f"{label} ({name}): contains formula error {err}")
+              return
+  except zipfile.BadZipFile:
+    defects.append(f"{label}: invalid XLSX ZIP container")
+
+def check_docx(data, label, defects):
+  try:
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+      if "word/document.xml" not in zf.namelist():
+        defects.append(f"{label}: missing word/document.xml")
+        return
+      ET.fromstring(zf.read("word/document.xml"))
+  except (zipfile.BadZipFile, ET.ParseError, KeyError) as exc:
+    defects.append(f"{label}: invalid DOCX ({exc})")
+
+def check_payload(ext, data, label, defects, depth=0):
+  if len(data) == 0:
+    defects.append(f"{label}: empty 0-byte deliverable")
+    return
+  if ext == ".zip" and depth == 0:
+    try:
+      with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        entries = [i for i in zf.infolist() if not i.is_dir()]
+        if not entries:
+          defects.append(f"{label}: archive has zero files")
+          return
+        bad = zf.testzip()
+        if bad is not None:
+          defects.append(f"{label}: corrupt archive entry {bad}")
+          return
+        for info in entries[:64]:
+          inner_ext = pathlib.Path(info.filename).suffix.lower()
+          check_payload(inner_ext, zf.read(info.filename), f"{label}!{info.filename}", defects, depth + 1)
+    except zipfile.BadZipFile:
+      defects.append(f"{label}: corrupt ZIP archive")
+  elif ext in (".xlsx", ".xlsm"):
+    check_xlsx(data, label, defects)
+  elif ext == ".docx":
+    check_docx(data, label, defects)
+  elif ext == ".json":
+    try:
+      json.loads(data.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+      defects.append(f"{label}: invalid JSON ({exc})")
+  elif ext == ".csv":
+    text = data.decode("utf-8", errors="replace").strip()
+    if not text or sum(1 for _ in csv.reader(io.StringIO(text))) < 1:
+      defects.append(f"{label}: empty CSV")
+  elif ext == ".dxf":
+    text = data.decode("utf-8", errors="replace")
+    if "SECTION" not in text or "EOF" not in text:
+      defects.append(f"{label}: incomplete DXF (missing SECTION/EOF)")
+  elif ext == ".ifc":
+    text = data.decode("utf-8", errors="replace")
+    if "ISO-10303-21;" not in text or "END-ISO-10303-21;" not in text:
+      defects.append(f"{label}: incomplete IFC (missing ISO-10303-21 wrapper)")
+  elif ext == ".pdf":
+    if not data.startswith(b"%PDF-") or b"%%EOF" not in data[-2048:]:
+      defects.append(f"{label}: invalid or truncated PDF")
+  elif ext == ".py":
+    try:
+      ast.parse(data.decode("utf-8"))
+    except (UnicodeDecodeError, SyntaxError) as exc:
+      defects.append(f"{label}: Python syntax error ({exc})")
+
+def main():
+  req = json.loads(sys.stdin.read())
+  mode = req["mode"]
+  roots = req["roots"]
+  current = scan_files(roots)
+  if mode == "snapshot":
+    print(json.dumps({"files": current}))
+    return
+  baseline = req.get("baseline") or {}
+  changed = sorted(p for p, meta in current.items() if baseline.get(p) != meta)
+  defects = []
+  for path_str in changed:
+    p = pathlib.Path(path_str)
+    try:
+      raw = p.read_bytes()
+    except OSError as exc:
+      defects.append(f"{path_str}: unreadable deliverable ({exc})")
+      continue
+    check_payload(p.suffix.lower(), raw, path_str, defects)
+  print(json.dumps({"changed": changed, "defects": defects}))
+
+if __name__ == "__main__":
+  main()
+"""
+
+
+def model_limits(model: str) -> dict[str, Any]:
+  """Returns capability limits for models absent from Pi's built-in catalog.
+
+  Args:
+    model: Bare model identifier (e.g. `gemini-4-argon`, `gpt-oss-120b`).
+
+  Returns:
+    Capability dictionary (`input`, `contextWindow`, `maxTokens`).
+  """
+  bare = model.split("/", 1)[-1].lower()
+  if bare in MODEL_SPECS:
+    return dict(MODEL_SPECS[bare])
+  if bare.startswith("gemini-4-"):
+    return dict(GEMINI_4_MODEL)
+  return dict(UNKNOWN_MODEL)
+
+
+def thinking_level(provider_name: str, model: str = "") -> str:
+  """Returns the optimal Pi `--thinking` flag for `provider_name` and `model`.
+
+  Per PLE `docs/models.md`, native Gemini API models reason deeper at `high`
+  than `max`, while Claude and GLM support `max`.
+
+  Args:
+    provider_name: Pi provider identifier (`anthropic`, `google`, or `model`).
+    model: Bare model identifier.
+
+  Returns:
+    The `--thinking` level string (`"max"` for Claude/GLM, else `"high"`).
+  """
+  low = model.lower()
+  if provider_name == "anthropic" or "claude" in low or "glm" in low:
+    return THINKING
+  if provider_name == "google":
+    return "high"
+  return "high"
+
+
+def note(session: taskbridge.Session) -> str:
+  """Returns the system prompt appendix for `session`.
+
+  Args:
+    session: Active task session.
+
+  Returns:
+    Formatted `NOTE` for `session.workdir`, plus `TIME_NOTE` when timed.
+  """
+  left = session.time_left()
+  text = NOTE.format(workdir=session.workdir)
+  if left is None:
+    return text
+  return text + TIME_NOTE.format(minutes=max(1, int(left // 60)))
 
 
 def provider() -> tuple[str, dict[str, Any]]:
@@ -157,7 +368,7 @@ def in_catalog(name: str, model: str, env: dict[str, str]) -> bool:
   """Checks whether Pi's built-in model catalog recognizes `model`.
 
   If the probe hangs beyond `CATALOG_TIMEOUT_SEC` or fails, returns `False` so
-  the model is configured explicitly with `UNKNOWN_MODEL` limits.
+  the model is configured explicitly using `model_limits(model)`.
 
   Args:
     name: Provider name (`anthropic`, `google`, or `model`).
@@ -206,19 +417,124 @@ def configure(
   if not in_catalog(name, model, env):
     config["models"] = [{"id": model, "name": model, **model_limits(model)}]
     models.write_text(json.dumps({"providers": {name: config}}))
-  settings = {
-      "defaultProjectTrust": "never",
-      "quietStartup": True,
-      "cacheWarming": "off",
-      "retry": {"maxRetries": 6, "maxAgentDelayMs": 60000},
-  }
-  (agent_dir / "settings.json").write_text(json.dumps(settings))
+  (agent_dir / "settings.json").write_text(json.dumps(SETTINGS))
   servers = {
       s["name"]: {"url": relay.mcp_url(s["name"]), "timeout": 300}
       for s in session.mcp_servers
   }
   (agent_dir / "mcp.json").write_text(json.dumps({"mcpServers": servers}))
   return name, model
+
+
+def _audit_roots(workdir: str) -> list[str]:
+  """Returns container roots scanned for new or modified task deliverables."""
+  roots: list[str] = []
+  for candidate in (workdir, "/app/output", "/filesystem"):
+    if candidate and candidate not in roots:
+      roots.append(candidate)
+  return roots
+
+
+async def _exec_container_audit(
+    session: taskbridge.Session,
+    mode: str,
+    roots: list[str],
+    baseline: dict[str, list[int]] | None = None,
+    timeout_sec: int = 25,
+) -> dict[str, Any]:
+  """Executes `_CONTAINER_AUDIT_PY` inside the task container via `session.exec`."""
+  if not hasattr(session, "exec"):
+    return {}
+  b64_script = base64.b64encode(_CONTAINER_AUDIT_PY.encode("utf-8")).decode("ascii")
+  payload = json.dumps(
+      {"mode": mode, "roots": roots, "baseline": baseline or {}}
+  ).replace("__PE_VERIFLOW_JSON__", "__PE_VERIFLOW_JSON_ESCAPED__")
+  py_exec = (
+      f'import base64; exec(base64.b64decode("{b64_script}").decode("utf-8"))'
+  )
+  cmd = (
+      'PY=$(command -v python3 || command -v python || true)\n'
+      'if [ -n "$PY" ]; then\n'
+      f'  "$PY" -c {shlex.quote(py_exec)} <<\'__PE_VERIFLOW_JSON__\'\n'
+      f"{payload}\n"
+      "__PE_VERIFLOW_JSON__\n"
+      "fi"
+  )
+  try:
+    res = await session.exec(cmd, timeout_sec=timeout_sec)
+  except Exception:  # pylint: disable=broad-exception-caught
+    return {}
+  if res.get("exit_code") != 0:
+    return {}
+  raw = (res.get("output") or "").strip().splitlines()
+  if not raw:
+    return {}
+  try:
+    parsed = json.loads(raw[-1])
+  except ValueError:
+    return {}
+  return parsed if isinstance(parsed, dict) else {}
+
+
+async def snapshot_workdir(session: taskbridge.Session) -> dict[str, list[int]]:
+  """Captures `{path: [size, mtime_ns]}` across task roots prior to execution."""
+  res = await _exec_container_audit(
+      session, "snapshot", _audit_roots(session.workdir), timeout_sec=15
+  )
+  files = res.get("files")
+  return files if isinstance(files, dict) else {}
+
+
+async def audit_deliverables(
+    session: taskbridge.Session,
+    baseline: dict[str, list[int]],
+) -> list[str]:
+  """Runs programmatic Gate-3 checks on deliverables and the final summary.
+
+  Args:
+    session: Active task session after the primary agent pass.
+    baseline: File state mapping returned by `snapshot_workdir()`.
+
+  Returns:
+    List of human-readable defect descriptions; empty when checks pass.
+  """
+  res = await _exec_container_audit(
+      session,
+      "audit",
+      _audit_roots(session.workdir),
+      baseline=baseline,
+      timeout_sec=30,
+  )
+  changed = res.get("changed") if isinstance(res.get("changed"), list) else []
+  defects = list(res.get("defects") or [])
+  msg = (session.final_message or "").strip()
+  low = msg.lower()
+  if not msg or msg == "[tool call]":
+    defects.append(
+        "final_message is empty or stopped on an unresolved [tool call]"
+    )
+  elif not changed and (
+      len(msg) < 200
+      or "let me check" in low[-80:]
+      or not any(
+          kw in low
+          for kw in (
+              "deliver",
+              "saved",
+              "wrote",
+              "written",
+              "created",
+              "openproject",
+              "email",
+              "submission",
+          )
+      )
+  ):
+    defects.append(
+        "zero deliverables written or modified and final_message appears"
+        " incomplete"
+    )
+  return defects
 
 
 class Run:
@@ -278,22 +594,13 @@ class Run:
       await self.on_event(event)
 
 
-async def solve(session: taskbridge.Session) -> str:
-  """Runs Pi on a single task and returns the final response.
-
-  Creates an isolated temporary agent home, configures tools and MCP servers to
-  communicate through `taskbridge.Relay`, and feeds the task instruction on
-  standard input.
-
-  Args:
-    session: Active task session.
-
-  Returns:
-    The final message produced by Pi.
-
-  Raises:
-    RuntimeError: If Pi exits before the model produces any assistant reply.
-  """
+async def _run_pi_pass(
+    session: taskbridge.Session,
+    prompt_bytes: bytes,
+    *,
+    stop_before_sec: float,
+) -> tuple[Run, taskbridge.Finished]:
+  """Spawns one isolated headless Pi session connected through `taskbridge.Relay`."""
   with tempfile.TemporaryDirectory(
       prefix="pi-",
       dir=os.environ.get("HOME") or None,
@@ -335,9 +642,9 @@ async def solve(session: taskbridge.Session) -> str:
           "--model",
           model,
           "--thinking",
-          thinking_level(name),
+          thinking_level(name, model),
           "--append-system-prompt",
-          NOTE.format(workdir=session.workdir),
+          note(session),
       ]
       run = Run(session, model)
       done = await taskbridge.run_process(
@@ -346,13 +653,70 @@ async def solve(session: taskbridge.Session) -> str:
           env=env,
           cwd=str(work),
           on_line=run.on_line,
-          stdin=session.instruction.encode(),
-          stop_before_sec=STOP_BEFORE_SEC,
+          stdin=prompt_bytes,
+          stop_before_sec=stop_before_sec,
           log_prefix="pi: ",
       )
+  return run, done
+
+
+async def solve(session: taskbridge.Session) -> str:
+  """Runs Pi on a single task with Gate-3 cold-read deliverable remediation.
+
+  Args:
+    session: Active task session.
+
+  Returns:
+    The final message produced by Pi.
+
+  Raises:
+    RuntimeError: If Pi exits before the model produces any assistant reply.
+  """
+  baseline = await snapshot_workdir(session)
+  left_initial = session.time_left()
+  primary_reserve = (
+      WORK_RESERVE_SEC
+      if left_initial is None or left_initial >= 900
+      else STOP_BEFORE_SEC
+  )
+  run, done = await _run_pi_pass(
+      session,
+      session.instruction.encode("utf-8"),
+      stop_before_sec=primary_reserve,
+  )
   if not run.replies:
     raise RuntimeError(
         f"pi exited with {done.code} before the model answered:"
         f" {done.stderr[-2000:]}"
     )
+
+  defects = await audit_deliverables(session, baseline)
+  left_after = session.time_left()
+  if defects and (
+      left_after is None or left_after - STOP_BEFORE_SEC >= MIN_RECOVERY_SEC
+  ):
+    await session.log(
+        f"pe-veriflow gate-3 audit found {len(defects)} defect(s): "
+        + "; ".join(defects[:8])
+    )
+    bullet_list = "\n".join(f"- {d}" for d in defects[:12])
+    remedy_prompt = (
+        f"{session.instruction}\n\n"
+        f"## Prior Attempt Summary\n{session.final_message or '(none)'}\n\n"
+        "## Gate-3 Cold-Read Deliverable Defects Detected\n"
+        f"Fix every issue below before finishing, verify the saved deliverables"
+        f" from disk, and return the complete engineering summary:\n{bullet_list}"
+    )
+    fix_run, _ = await _run_pi_pass(
+        session,
+        remedy_prompt.encode("utf-8"),
+        stop_before_sec=STOP_BEFORE_SEC,
+    )
+    if not fix_run.replies:
+      await session.log(
+          "pe-veriflow gate-3 remediation ended before producing a reply"
+      )
+  else:
+    await session.log(f"pe-veriflow gate-3 audit: {len(defects)} defect(s)")
+
   return session.final_message or "(pi stopped without a final message)"

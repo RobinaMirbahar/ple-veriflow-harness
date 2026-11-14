@@ -32,12 +32,13 @@ jobs:
         run: |
           python -c "
           import json, yaml
-          with open('submission.yaml') as f:
+          with open('submission.yaml', encoding='utf-8') as f:
               sub = yaml.safe_load(f)
           assert sub['name'] == 'ple-veriflow-harness', sub
           assert sub['model_api'] == 'google-cloud/claude-opus-5-5', sub
-          with open('artifacts/manifest.json') as f:
+          with open('artifacts/manifest.json', encoding='utf-8') as f:
               man = json.load(f)
+          assert man.get('format') == 1, man
           assert 'harness' in man and 'files' in man['harness'], man['harness']
           assert 'submission.yaml' in man['harness']['files'], man['harness']['files']
           assert len(man['tasks']) == 29

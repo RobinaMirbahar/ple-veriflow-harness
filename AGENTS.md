@@ -82,11 +82,6 @@ Available Google-sponsored models (all support tool calling):
 | `google-cloud/gemini-3.1-pro-preview` | Gemini 3.1 Pro (preview) |
 | `google-cloud/claude-opus-5-5` | Claude Opus 5.5 |
 | `google-cloud/gpt-oss-120b` | gpt-oss 120B |
-| `google-cloud/qwen3-coder-480b` | Qwen3 Coder 480B A35B |
-| `google-cloud/qwen3-next-80b` | Qwen3-Next 80B A3B Instruct |
-| `google-cloud/deepseek-v3.2` | DeepSeek-V3.2 |
-| `google-cloud/kimi-k2-thinking` | Kimi K2 Thinking |
-| `google-cloud/minimax-m2` | MiniMax M2 |
 | `google-cloud/glm-5.2` | GLM 5.2 |
 | `google-cloud/gemma-4-26b` | Gemma 4 26B A4B |
 | `google-cloud/llama-4-maverick` | Llama 4 Maverick 17B 128E |
