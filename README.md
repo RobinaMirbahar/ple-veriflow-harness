@@ -103,3 +103,9 @@ uv run python eval/run.py ../ple-veriflow-harness
 - Ouyang, S., Yan, J., Han, R., Lee, C.-Y., Pfister, T., et al. (2026). *ReasoningBank: Scaling Agent Self-Evolving with Reasoning Memory*. ICLR 2026 (`arXiv:2509.25140`).
 - Liu, T., Wang, Z., Han, R., Pfister, T., Lee, C.-Y., et al. (2026). *Budget-Aware Tool-Use Enables Effective Agent Scaling (BATS)*. COLM 2026 (`arXiv:2511.17006`).
 - Ray, A., Bashkirova, D., Tan, R., Zeng, K.-H., Plummer, B. A., Krishna, R., & Saenko, K. (2024). *R2D3: Imparting Spatial Reasoning by Reconstructing 3D Scenes from 2D Images*. OpenReview Archive.
+
+---
+
+### Official Google Developer Resources
+- [Google for Developers](https://developers.google.com/?utm_campaign=deveco_gdemembers&utm_source=deveco)
+- [Google Cloud AI Documentation](https://cloud.google.com/ai?utm_campaign=deveco_gdemembers&utm_source=deveco)
