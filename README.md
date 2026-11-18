@@ -8,8 +8,11 @@
 **Companion Notebook:** [PE-VeriFlow Hard-Gate Agent Harness PLE](https://www.kaggle.com/code/robinamirbahar/pe-veriflow-hard-gate-agent-harness-ple)  
 **License:** Code under Apache-2.0 (`LICENSE`); companion documentation under CC BY 4.0
 
----
+> **Author & Architect:** [Robina Mirbahar](https://github.com/RobinaMirbahar) ([Google Developer Expert in Cloud & AI](https://developers.google.com/profile/u/106918534005910641104?utm_campaign=deveco_gdemembers&utm_source=deveco) · Google Cloud Champion Innovator · Co-Author of [*AI Engineering*](https://www.amazon.com/dp/B0GWCZWCF4))  
+> 📚 **Competition & Writeup:** [Google Physical-Engineering's Last Exam (PLE)](https://www.kaggle.com/competitions/physical-engineerings-last-exam) · [Kaggle Writeup](https://www.kaggle.com/competitions/physical-engineerings-last-exam/writeups/pe-veriflow-3-gate-verification-harness-ple) · [Companion Notebook](https://www.kaggle.com/code/robinamirbahar/pe-veriflow-hard-gate-agent-harness-ple)  
+> **Core Stack:** [Google Gemini 4 Argon / Carbon](https://ai.google.dev/gemini-api/docs?utm_campaign=deveco_gdemembers&utm_source=deveco), Pi Coding Agent (@earendil-works/pi-coding-agent), 3-Gate Deterministic Container Auditor (_CONTAINER_AUDIT_PY), and BIM/IFC/OOXML Verification.
 
+---
 ## Overview
 
 `PE-VeriFlow` is my single-loop verification harness for Google's Physical-Engineering's Last Exam (`PLE`). Long-horizon engineering benchmarks often assign `0.000` reward on conjunctive hard gates even when an agent appears confident. Published baseline analysis by Han et al. (2026, `arXiv:2610.30537`) shows that `23.2%` of frontier agent runs score `0.000`: `70.4%` submit files that fail grader checks, `25.3%` terminate early or hit tool-call dead ends without writing deliverables, and `4.3%` fail from runtime or proxy interruptions.
@@ -21,6 +24,40 @@ Rather than spawning multi-agent sub-teams that duplicate context and degrade de
 ## Architecture & Control Flow
 
 ![PE-VeriFlow Architecture](figures/ple_fig1_architecture.png)
+
+### 📐 Color-Coded 3-Gate Verification Harness Flow
+> *(🩷 Pink = Task Snapshot & Provider Routing | 💙 Blue = Gate 1 & Gate 2 Dual-Method Engineering Solve | 💚 Green = Gate 3 Container Cold-Read Auditor | 💜 Purple = Bounded Remediation & Verified Deliverable)*
+
+```mermaid
+flowchart TD
+    subgraph Init ["1. Harness Initialization (harness.py)"]
+        I_Snap["Baseline Filesystem Snapshot (snapshot_workdir)"]
+        I_Route["Model Routing, High/Max Thinking & Streaming Cache Warming"]
+    end
+    subgraph Solve ["2. Single-Session Pi Coding Loop"]
+        G1["Gate 1: Document Precedence, Datum & Equilibrium Check"]
+        G2["Gate 2: Independent Second-Method Cross-Solve (SciPy/FE/SPICE)"]
+    end
+    subgraph Audit ["3. Gate 3 Container Cold-Read Auditor (_CONTAINER_AUDIT_PY)"]
+        G3["Inspect Created/Modified .zip, .xlsx, .docx, .ifc, .dxf, .pdf, .py<br/>(Zero #REF!/#DIV/0! Cells, Valid STEP/OOXML/EOF Headers)"]
+    end
+    subgraph Out ["4. Remediation & Submission"]
+        R_Fix["Bounded Remediation Pass (if defects found & budget > 135s)"]
+        O_Pass["Verified Engineering Deliverables on Disk"]
+    end
+    I_Snap --> I_Route --> G1 --> G2 --> G3
+    G3 -->|"Defects Detected"| R_Fix --> G3
+    G3 -->|"0 Defects"| O_Pass
+
+    style I_Snap fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843
+    style I_Route fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843
+    style G1 fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    style G2 fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    style G3 fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
+    style R_Fix fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#581c87
+    style O_Pass fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#581c87
+```
+
 
 1. **Provider Routing & Prompt Cache Stability (`configure()`, `provider()`, `MODEL_SPECS`):**
    - Explicitly registers capability profiles (`input`, `contextWindow`, `maxTokens`) for all 8 sponsored competition models (`claude-opus-5-5`, `claude-sonnet-5`, `gemini-4-argon`, `gemini-3.8-pro`, `gemini-3.8-flash`, `glm-6`, `qwen-4-320b`, `gpt-oss-120b`) plus `gemini-4-carbon`.
