@@ -25,9 +25,7 @@ Rather than spawning multi-agent sub-teams that duplicate context and degrade de
 
 ![PE-VeriFlow Architecture](figures/ple_fig1_architecture.png)
 
-### 📐 Color-Coded 3-Gate Verification Harness Flow
-> *(🩷 Pink = Task Snapshot & Provider Routing | 💙 Blue = Gate 1 & Gate 2 Dual-Method Engineering Solve | 💚 Green = Gate 3 Container Cold-Read Auditor | 💜 Purple = Bounded Remediation & Verified Deliverable)*
-
+### 📐 3-Gate Verification Harness Flow
 ```mermaid
 flowchart TD
     subgraph Init ["1. Harness Initialization (harness.py)"]
@@ -48,14 +46,6 @@ flowchart TD
     I_Snap --> I_Route --> G1 --> G2 --> G3
     G3 -->|"Defects Detected"| R_Fix --> G3
     G3 -->|"0 Defects"| O_Pass
-
-    style I_Snap fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843
-    style I_Route fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843
-    style G1 fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
-    style G2 fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
-    style G3 fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d
-    style R_Fix fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#581c87
-    style O_Pass fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#581c87
 ```
 
 
