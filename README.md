@@ -2,15 +2,10 @@
 
 ![PE-VeriFlow Cover Banner](figures/ple_cover_banner.png)
 
-**Solo Author:** Robina Mirbahar  
-**Competition:** [Google -- Agent Harness on Physical-Engineering's Last Exam (PLE)](https://www.kaggle.com/competitions/physical-engineerings-last-exam)  
-**Kaggle Writeup:** [PE-VeriFlow: 3-Gate Verification Harness for Physical Engineering](https://www.kaggle.com/competitions/physical-engineerings-last-exam/writeups/pe-veriflow-3-gate-verification-harness-ple)  
-**Companion Notebook:** [PE-VeriFlow Hard-Gate Agent Harness PLE](https://www.kaggle.com/code/robinamirbahar/pe-veriflow-hard-gate-agent-harness-ple)  
-**License:** Code under Apache-2.0 (`LICENSE`); companion documentation under CC BY 4.0
-
 > **Author & Architect:** [Robina Mirbahar](https://github.com/RobinaMirbahar) ([Google Developer Expert in Cloud & AI](https://developers.google.com/profile/u/106918534005910641104?utm_campaign=deveco_gdemembers&utm_source=deveco) · Google Cloud Champion Innovator · Co-Author of [*AI Engineering*](https://www.amazon.com/dp/B0GWCZWCF4))  
 > 📚 **Competition & Writeup:** [Google Physical-Engineering's Last Exam (PLE)](https://www.kaggle.com/competitions/physical-engineerings-last-exam) · [Kaggle Writeup](https://www.kaggle.com/competitions/physical-engineerings-last-exam/writeups/pe-veriflow-3-gate-verification-harness-ple) · [Companion Notebook](https://www.kaggle.com/code/robinamirbahar/pe-veriflow-hard-gate-agent-harness-ple)  
-> **Core Stack:** [Google Gemini 4 Argon / Carbon](https://ai.google.dev/gemini-api/docs?utm_campaign=deveco_gdemembers&utm_source=deveco), Pi Coding Agent (@earendil-works/pi-coding-agent), 3-Gate Deterministic Container Auditor (_CONTAINER_AUDIT_PY), and BIM/IFC/OOXML Verification.
+> **Core Stack:** [Google Gemini 4 Argon / Carbon](https://ai.google.dev/gemini-api/docs?utm_campaign=deveco_gdemembers&utm_source=deveco), Pi Coding Agent (@earendil-works/pi-coding-agent), 3-Gate Deterministic Container Auditor (_CONTAINER_AUDIT_PY), and BIM/IFC/OOXML Verification.  
+> **License:** Code under Apache-2.0 (`LICENSE`); companion documentation under CC BY 4.0
 
 ---
 ## Overview
