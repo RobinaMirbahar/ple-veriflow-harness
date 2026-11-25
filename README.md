@@ -45,7 +45,7 @@ flowchart TD
 
 
 1. **Provider Routing & Prompt Cache Stability (`configure()`, `provider()`, `MODEL_SPECS`):**
-   - Explicitly registers capability profiles (`input`, `contextWindow`, `maxTokens`) for all 8 sponsored competition models (`claude-opus-5-5`, `gemini-4-argon`, `gemini-3.8-flash`, `gemini-3.1-pro-preview`, `gemma-4-26b`, `gpt-oss-120b`, `glm-5.2`, `llama-4-maverick`) plus `gemini-4-carbon`.
+   - Explicitly registers capability profiles (`input`, `contextWindow`, `maxTokens`) for all 11 sponsored competition models (`claude-opus-5-5`, `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-hydrogen`, `gemini-4-neon`, `gemini-3.8-flash`, `gemini-3.1-pro-preview`, `gemma-4-26b`, `gpt-oss-120b`, `glm-5.2`, `llama-4-maverick`).
    - Applies provider-specific thinking depth via `thinking_level()` (`high` for native Google Gemini models per `ple/docs/models.md`; `max` for Claude and GLM).
    - Enables `"cacheWarming": "streaming"` and resilient proxy retry backoff (`maxRetries: 8`, `baseDelayMs: 2000`, `httpIdleTimeoutMs: 3_600_000`).
 2. **Baseline Filesystem Snapshot (`snapshot_workdir()`):**

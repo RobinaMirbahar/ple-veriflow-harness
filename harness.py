@@ -79,6 +79,8 @@ MODEL_SPECS: dict[str, dict[str, Any]] = {
     },
     "gemini-4-argon": dict(GEMINI_4_MODEL),
     "gemini-4-carbon": dict(GEMINI_4_MODEL),
+    "gemini-4-hydrogen": dict(GEMINI_4_MODEL),
+    "gemini-4-neon": dict(GEMINI_4_MODEL),
     "gemini-3.8-flash": dict(GEMINI_4_MODEL),
     "gemini-3.1-pro-preview": dict(GEMINI_4_MODEL),
     "gpt-oss-120b": {
